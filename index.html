@@ -1,0 +1,136 @@
+<html>
+
+<head>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+        crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <div id="container"></div>
+</body>
+<script>
+    const chart = Highcharts.chart('container', {
+
+        chart: {
+            zoomType: 'x',
+        },
+
+        title: {
+            text: 'Kafka Throughput and Latency'
+        },
+
+        subtitle: {
+            text: 'Based on CommerceTest Kafka Results'
+        },
+
+        tooltip: {
+            crosshairs: {
+                dashStyle: 'solid'
+            },
+            shared: true
+        },
+
+        yAxis: {
+            title: {
+                text: 'Throughput'
+            }
+        },
+
+        xAxis: {
+            type: 'datetime',
+            dateTimeLabelFormats: {
+                day: '%H:%M:%S'
+            }
+        },
+
+        legend: {
+            layout: 'vertical',
+            align: 'right',
+            verticalAlign: 'middle'
+        },
+
+        plotOptions: {
+            series: {
+                label: {
+                    connectorAllowed: false
+                },
+                pointStart: 2010
+            }
+        },
+
+        responsive: {
+            rules: [{
+                condition: {
+                    maxWidth: 500
+                },
+                chartOptions: {
+                    legend: {
+                        layout: 'horizontal',
+                        align: 'center',
+                        verticalAlign: 'bottom'
+                    }
+                }
+            }]
+        }
+    });
+
+    function getCSVData(url) {
+        return $.get(url)
+            .then(res => {
+                return res.split('\n')
+                    .map(row => row.split(',').map(Number));
+            });
+    }
+
+    getCSVData('out/throughputXtimestamp-results-loadgen.0.csv').then(data => {
+        chart.addSeries({
+            name: 'Thread 0 - Throughput X Time',
+            data: data
+        });
+    });
+    getCSVData('out/throughputXtimestamp-results-loadgen.1.csv').then(data => {
+        chart.addSeries({
+            name: 'Thread 1 - Throughput X Time',
+            data: data
+        });
+    });
+    getCSVData('out/throughputXtimestamp-results-loadgen.2.csv').then(data => {
+        chart.addSeries({
+            name: 'Thread 2 - Throughput X Time',
+            data: data
+        });
+    });
+
+    getCSVData('out/throughputXtimestamp-merged.csv').then(data => {
+        chart.addSeries({
+            name: 'Thread 2 - Throughput X Time',
+            data: data
+        });
+    });
+
+
+    // getCSVData('out/latencyXtimestamp-results-loadgen.0.csv').then(data => {
+    //     chart.addSeries({
+    //         name: 'Thread 0 - Latency X Time',
+    //         data: data
+    //     });
+    // });
+
+    // getCSVData('out/latencyXtimestamp-results-loadgen.1.csv').then(data => {
+    //     chart.addSeries({
+    //         name: 'Thread 1 - Latency X Time',
+    //         data: data
+    //     });
+    // });
+
+    // getCSVData('out/latencyXtimestamp-results-loadgen.2.csv').then(data => {
+    //     chart.addSeries({
+    //         name: 'Thread 2 - Latency X Time',
+    //         data: data
+    //     });
+    // });
+
+</script>
+
+</html>
