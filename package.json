@@ -1,0 +1,13 @@
+{
+  "name": "sn-csv-graph",
+  "version": "1.0.0",
+  "description": "",
+  "main": "process.js",
+  "scripts": {
+    "serve": "http-server",
+    "process": "node process.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
