@@ -159,7 +159,7 @@ fs.readdir(inDir, (err, folders) => {
                 fs.readdir(path.join(inDir, threadFolderPath), (err, threadFiles) => {
                     if (!threadFiles.length) return resolve({});
 
-                    const allThreads = threadFiles.map(threadFileName => {
+                    const allThreads = threadFiles.filter(a => !!~a.indexOf('.csv')).map(threadFileName => {
                         const threadFilePath = path.join(inDir, threadFolderPath, threadFileName);
                         console.info(`[${new Date().toUTCString()}] Processing [${threadFileName}]`);
                         const fileString = fs.readFileSync(threadFilePath, 'utf8');
