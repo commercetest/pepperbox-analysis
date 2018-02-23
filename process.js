@@ -158,6 +158,16 @@ fs.readdir(inDir, (err, folders) => {
                 return new Promise((resolve, reject) => {
                     const currentFolderPath = path.join(inDir, threadFolderPath);
                     const threadFilePath = path.join(currentFolderPath, 'combined.csv');
+                    const prevFile = path.join(currentFolderPath, 'prevRun.json');
+
+                    try {
+                        fs.statSync(prevFile);
+                        const file = JSON.parse(fs.readFileSync(prevFile, 'utf8'));
+                        resolve(file);
+                        return;
+                    } catch (err) {
+
+                    }
 
                     console.info(`[${new Date().toUTCString()}] Combining [${threadFolderPath}] threads`);
 
@@ -217,10 +227,13 @@ fs.readdir(inDir, (err, folders) => {
 
                         console.log(`[${new Date().toUTCString()}] Got avg messages per second [${avgThroughputPerSecond}]`);
 
-                        resolve({
+                        const res = {
                             threads: Number(threadFolderPath),
                             avgThroughputPerSecond: avgThroughputPerSecond,
-                        });
+                        };
+
+                        fs.writeFileSync(prevFile, JSON.stringify(res), 'utf8');
+                        resolve(res);
                     });
 
 
