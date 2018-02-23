@@ -1,5 +1,3 @@
-const LineByLineReader = require('line-by-line');
-
 const processes = [{
     name: 'Throughput X Timestamp',
     filenamePrefix: 'throughputXtimestamp',
@@ -164,22 +162,24 @@ fs.readdir(inDir, (err, folders) => {
                     console.info(`[${new Date().toUTCString()}] Combining [${threadFolderPath}] threads`);
 
                     // require('child_process').execSync(`cd ${currentFolderPath} &&\
-                    // rm ${threadFilePath}; \
-                    // head -1 results-loadgen.0.csv > ${threadFilePath} && \
-                    // for filename in $(ls results*.csv); do sed 1d $filename >> ${threadFilePath}; done`, {
+                    // rm combined.csv; \
+                    // head -1 results-loadgen.0.csv > combined.csv && \
+                    // for filename in $(ls results*.csv); do sed 1d $filename >> combined.csv; done`, {
                     //     stdio: [0, 1, 2]
                     // });
 
                     console.info(`[${new Date().toUTCString()}] Processing combined [${threadFolderPath}] threads`);
 
-                    const lr = new LineByLineReader(threadFilePath, {
-                        encoding: 'ascii',
-                    });
-
                     const throughputXSecond = {};
                     const individualSeconds = [];
 
-                    lr.on('line', (line) => {
+                    var fs = require('fs'),
+                        readline = require('readline'),
+                        instream = fs.createReadStream(threadFilePath, 'ascii'),
+                        outstream = new(require('stream'))(),
+                        lr = readline.createInterface(instream, outstream);
+
+                    lr.on('line', function (line) {
                         const [batchReceived, messageGenerated, consumerLag, messageId, recordOffset, messageSize] = line.split(',').map(Number);
                         if (isNaN(batchReceived)) {
                             return;
@@ -193,27 +193,37 @@ fs.readdir(inDir, (err, folders) => {
                         throughputXSecond[secondTS]++;
                     });
 
-                    lr.on('end', () => {
+                    lr.on('close', function (line) {
                         console.info(`[${new Date().toUTCString()}] Processed [${threadFilePath}]`);
                         let total = 0;
                         const numSeconds = individualSeconds.length;
                         const quaterIndex = Math.floor(numSeconds / 4);
 
+                        console.log(`[${new Date().toUTCString()}] Got numSeconds [${numSeconds}] and quaterIndex [${quaterIndex}]`);
+
                         const interestingSeconds = individualSeconds
                             .sort()
                             .slice(quaterIndex, quaterIndex * 3);
+
+                        console.log(`[${new Date().toUTCString()}] Got sorted seconds [${interestingSeconds.length}]`);
 
                         for (let second of interestingSeconds) {
                             total += throughputXSecond[second];
                         }
 
+                        console.log(`[${new Date().toUTCString()}] Got total time [${total}]`);
+
                         const avgThroughputPerSecond = total / interestingSeconds.length;
+
+                        console.log(`[${new Date().toUTCString()}] Got avg messages per second [${avgThroughputPerSecond}]`);
 
                         resolve({
                             threads: Number(threadFolderPath),
                             avgThroughputPerSecond: avgThroughputPerSecond,
                         });
                     });
+
+
                 });
             })
         ).then((threadSamples) => {
