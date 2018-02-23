@@ -146,8 +146,6 @@ console.info(`Reading all .csv files from [${inDir}]`);
 //     processDataset('merged.csv', mergedData);
 // });
 
-
-
 fs.readdir(inDir, (err, folders) => {
     const threadFolders = folders.filter(a => !isNaN(Number(a)));
     console.info(`Found [${threadFolders.length}] thread groups`);
@@ -166,7 +164,7 @@ fs.readdir(inDir, (err, folders) => {
                         resolve(file);
                         return;
                     } catch (err) {
-
+                        console.warn(err);
                     }
 
                     console.info(`[${new Date().toUTCString()}] Combining [${threadFolderPath}] threads`);
@@ -183,11 +181,11 @@ fs.readdir(inDir, (err, folders) => {
                     const throughputXSecond = {};
                     const individualSeconds = [];
 
-                    var fs = require('fs'),
-                        readline = require('readline'),
-                        instream = fs.createReadStream(threadFilePath, 'ascii'),
-                        outstream = new(require('stream'))(),
-                        lr = readline.createInterface(instream, outstream);
+
+                    const readline = require('readline');
+                    const instream = fs.createReadStream(threadFilePath, 'ascii');
+                    const outstream = new(require('stream'))();
+                    const lr = readline.createInterface(instream, outstream);
 
                     lr.on('line', function (line) {
                         const [batchReceived, messageGenerated, consumerLag, messageId, recordOffset, messageSize] = line.split(',').map(Number);
