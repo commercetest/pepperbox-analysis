@@ -163,12 +163,12 @@ fs.readdir(inDir, (err, folders) => {
 
                     console.info(`[${new Date().toUTCString()}] Combining [${threadFolderPath}] threads`);
 
-                    require('child_process').execSync(`cd ${currentFolderPath} &&\
-                    rm ${threadFilePath}; \
-                    head -1 results-loadgen.0.csv > ${threadFilePath} && \
-                    for filename in $(ls results*.csv); do sed 1d $filename >> ${threadFilePath}; done`, {
-                        stdio: [0, 1, 2]
-                    });
+                    // require('child_process').execSync(`cd ${currentFolderPath} &&\
+                    // rm ${threadFilePath}; \
+                    // head -1 results-loadgen.0.csv > ${threadFilePath} && \
+                    // for filename in $(ls results*.csv); do sed 1d $filename >> ${threadFilePath}; done`, {
+                    //     stdio: [0, 1, 2]
+                    // });
 
                     console.info(`[${new Date().toUTCString()}] Processing combined [${threadFolderPath}] threads`);
 
@@ -179,7 +179,7 @@ fs.readdir(inDir, (err, folders) => {
                     const throughputXSecond = {};
                     const individualSeconds = [];
 
-                    lr.on('line', (line) => { //TODO: ignore first and last 25%
+                    lr.on('line', (line) => {
                         const [batchReceived, messageGenerated, consumerLag, messageId, recordOffset, messageSize] = line.split(',').map(Number);
                         if (isNaN(batchReceived)) {
                             return;
