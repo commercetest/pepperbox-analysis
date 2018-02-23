@@ -1,5 +1,3 @@
-
-
 const processes = [{
     name: 'Throughput X Timestamp',
     filenamePrefix: 'throughputXtimestamp',
@@ -54,7 +52,7 @@ function untranspose(data) {
 function mergeOn(key, ...datasets) {
     return untranspose(
         datasets.map(transpose)
-        .reduce(flatten)
+        .reduce(flatten, [])
         .sort((a, b) => a[key] > b[key] ? 1 : -1));
 }
 
@@ -129,21 +127,76 @@ const outDir = path.join(__dirname, './out/');
 
 console.info(`Reading all .csv files from [${inDir}]`);
 
-fs.readdir(inDir, (err, files) => {
-    const csvFiles = files.filter(f => !!~f.indexOf('.csv'));
-    console.info(`Found [${csvFiles.length}] CSV files`);
+// fs.readdir(inDir, (err, files) => {
+//     const csvFiles = files.filter(f => !!~f.indexOf('.csv'));
+//     console.info(`Found [${csvFiles.length}] CSV files`);
 
-    const allData = csvFiles.map(fileName => {
-        console.info(`[${new Date().toUTCString()}] Processing [${fileName}]`);
-        const fileString = fs.readFileSync(path.join(inDir, fileName), 'utf8');
-        const fileData = parseCSV(fileString);
+//     const allData = csvFiles.map(fileName => {
+//         console.info(`[${new Date().toUTCString()}] Processing [${fileName}]`);
+//         const fileString = fs.readFileSync(path.join(inDir, fileName), 'utf8');
+//         const fileData = parseCSV(fileString);
 
-        processDataset(fileName, fileData);
+//         processDataset(fileName, fileData);
 
-        return fileData;
+//         return fileData;
+//     });
+
+//     const mergedData = mergeOn('batchReceived', ...allData);
+
+//     processDataset('merged.csv', mergedData);
+// });
+
+
+
+fs.readdir(inDir, (err, folders) => {
+    const threadFolders = folders.filter(a => !isNaN(Number(a)));
+    console.info(`Found [${threadFolders.length}] thread groups`);
+
+    Promise.all(
+        threadFolders
+        .map(threadFolderPath => {
+            return new Promise((resolve, reject) => {
+                fs.readdir(path.join(inDir, threadFolderPath), (err, threadFiles) => {
+                    if (!threadFiles.length) return resolve({});
+
+                    const allThreads = threadFiles.map(threadFileName => {
+                        const threadFilePath = path.join(inDir, threadFolderPath, threadFileName);
+                        console.info(`[${new Date().toUTCString()}] Processing [${threadFileName}]`);
+                        const fileString = fs.readFileSync(threadFilePath, 'utf8');
+                        const fileData = parseCSV(fileString);
+                        return fileData;
+                    });
+
+                    const mergedData = transpose(mergeOn('batchReceived', ...allThreads));
+
+                    const quaterIndex = Math.floor(mergedData.length / 4)
+                    const sampleData = untranspose(
+                        mergedData
+                        .slice(quaterIndex, quaterIndex * 3)
+                    );
+
+                    const throughputXTime = sampleData.batchReceived
+                        .reduce((acc, ts, index) => {
+                            const secondTs = Math.floor(ts / 1000);
+                            acc[secondTs] = acc[secondTs] || 0;
+                            acc[secondTs]++;
+                            return acc;
+                        }, {});
+
+                    const avgThroughputPerSecond = Object.values(throughputXTime).reduce((acc, val) => acc + val) / Object.keys(throughputXTime).length;
+
+                    resolve({
+                        threads: Number(threadFolderPath),
+                        avgThroughputPerSecond: avgThroughputPerSecond,
+                    });
+                });
+            });
+        })
+    ).then((threadSamples) => {
+        const outFile = path.join(outDir, 'throughput-and-threads.json');
+        fs.writeFileSync(outFile, JSON.stringify(threadSamples), 'utf8');
+        console.info(`[${new Date().toUTCString()}] File outputted to [${outFile}]`);
     });
 
-    const mergedData = mergeOn('batchReceived', ...allData);
-
-    processDataset('merged.csv', mergedData);
+    //processDataset('merged.csv', mergedData);
 });

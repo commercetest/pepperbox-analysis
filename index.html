@@ -21,7 +21,7 @@
         },
 
         subtitle: {
-            text: 'Based on CommerceTest Kafka Results'
+            text: 'Based on Commerce Test Kafka Results'
         },
 
         tooltip: {
@@ -33,15 +33,15 @@
 
         yAxis: {
             title: {
-                text: 'Throughput'
+                text: 'Messages'
             }
         },
 
         xAxis: {
-            type: 'datetime',
-            dateTimeLabelFormats: {
-                day: '%H:%M:%S'
-            }
+            // type: 'datetime',
+            // dateTimeLabelFormats: {
+            //     day: '%H:%M:%S'
+            // }
         },
 
         legend: {
@@ -83,31 +83,38 @@
             });
     }
 
-    getCSVData('out/throughputXtimestamp-results-loadgen.0.csv').then(data => {
+    $.getJSON('out/throughput-and-threads.json').then(data => {
         chart.addSeries({
-            name: 'Thread 0 - Throughput X Time',
-            data: data
-        });
-    });
-    getCSVData('out/throughputXtimestamp-results-loadgen.1.csv').then(data => {
-        chart.addSeries({
-            name: 'Thread 1 - Throughput X Time',
-            data: data
-        });
-    });
-    getCSVData('out/throughputXtimestamp-results-loadgen.2.csv').then(data => {
-        chart.addSeries({
-            name: 'Thread 2 - Throughput X Time',
-            data: data
+            name: 'Avg Throughput x Threads',
+            data: data.map(d => [d.threads, d.avgThroughputPerSecond])
         });
     });
 
-    getCSVData('out/throughputXtimestamp-merged.csv').then(data => {
-        chart.addSeries({
-            name: 'Thread 2 - Throughput X Time',
-            data: data
-        });
-    });
+    // getCSVData('out/throughputXtimestamp-results-loadgen.0.csv').then(data => {
+    //     chart.addSeries({
+    //         name: 'Thread 0 - Throughput x Time',
+    //         data: data
+    //     });
+    // });
+    // getCSVData('out/throughputXtimestamp-results-loadgen.1.csv').then(data => {
+    //     chart.addSeries({
+    //         name: 'Thread 1 - Throughput x Time',
+    //         data: data
+    //     });
+    // });
+    // getCSVData('out/throughputXtimestamp-results-loadgen.2.csv').then(data => {
+    //     chart.addSeries({
+    //         name: 'Thread 2 - Throughput x Time',
+    //         data: data
+    //     });
+    // });
+
+    // getCSVData('out/throughputXtimestamp-merged.csv').then(data => {
+    //     chart.addSeries({
+    //         name: 'All Threads - Throughput x Time',
+    //         data: data
+    //     });
+    // });
 
 
     // getCSVData('out/latencyXtimestamp-results-loadgen.0.csv').then(data => {
@@ -131,6 +138,12 @@
     //     });
     // });
 
+    // getCSVData('out/latencyXtimestamp-merged.csv').then(data => {
+    //     chart.addSeries({
+    //         name: 'All Threads - Latency X Time',
+    //         data: data
+    //     });
+    // });
 </script>
 
 </html>

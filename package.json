@@ -4,7 +4,7 @@
   "description": "",
   "main": "process.js",
   "scripts": {
-    "serve": "http-server",
+    "serve": "http-serve",
     "process": "node process.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
