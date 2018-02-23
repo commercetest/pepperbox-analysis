@@ -1,3 +1,5 @@
+const LineByLineReader = require('line-by-line');
+
 const processes = [{
     name: 'Throughput X Timestamp',
     filenamePrefix: 'throughputXtimestamp',
@@ -153,50 +155,74 @@ fs.readdir(inDir, (err, folders) => {
     console.info(`Found [${threadFolders.length}] thread groups`);
 
     Promise.all(
-        threadFolders
-        .map(threadFolderPath => {
-            return new Promise((resolve, reject) => {
-                fs.readdir(path.join(inDir, threadFolderPath), (err, threadFiles) => {
-                    if (!threadFiles.length) return resolve({});
+            threadFolders
+            .map(threadFolderPath => {
+                return new Promise((resolve, reject) => {
+                    const currentFolderPath = path.join(inDir, threadFolderPath);
+                    const threadFilePath = path.join(currentFolderPath, 'combined.csv');
 
-                    const allThreads = threadFiles.filter(a => !!~a.indexOf('.csv')).map(threadFileName => {
-                        const threadFilePath = path.join(inDir, threadFolderPath, threadFileName);
-                        console.info(`[${new Date().toUTCString()}] Processing [${threadFileName}]`);
-                        const fileString = fs.readFileSync(threadFilePath, 'utf8');
-                        const fileData = parseCSV(fileString);
-                        return fileData;
+                    console.info(`[${new Date().toUTCString()}] Combining [${threadFolderPath}] threads`);
+
+                    require('child_process').execSync(`cd ${currentFolderPath} &&\
+                    rm ${threadFilePath} && \
+                    head -1 results-loadgen.0.csv > ${threadFilePath} && \
+                    for filename in $(ls results*.csv); do sed 1d $filename >> ${threadFilePath}; done`, {
+                        stdio: [0, 1, 2]
                     });
 
-                    const mergedData = transpose(mergeOn('batchReceived', ...allThreads));
+                    console.info(`[${new Date().toUTCString()}] Processing combined [${threadFolderPath}] threads`);
 
-                    const quaterIndex = Math.floor(mergedData.length / 4)
-                    const sampleData = untranspose(
-                        mergedData
-                        .slice(quaterIndex, quaterIndex * 3)
-                    );
+                    const lr = new LineByLineReader(threadFilePath, {
+                        encoding: 'ascii',
+                    });
 
-                    const throughputXTime = sampleData.batchReceived
-                        .reduce((acc, ts, index) => {
-                            const secondTs = Math.floor(ts / 1000);
-                            acc[secondTs] = acc[secondTs] || 0;
-                            acc[secondTs]++;
-                            return acc;
-                        }, {});
+                    const throughputXSecond = {};
+                    const individualSeconds = [];
 
-                    const avgThroughputPerSecond = Object.values(throughputXTime).reduce((acc, val) => acc + val) / Object.keys(throughputXTime).length;
+                    lr.on('line', (line) => { //TODO: ignore first and last 25%
+                        const [batchReceived, messageGenerated, consumerLag, messageId, recordOffset, messageSize] = line.split(',').map(Number);
+                        if (isNaN(batchReceived)) {
+                            return;
+                        }
+                        const secondTS = Math.floor(batchReceived / 1000) * 1000;
+                        if (typeof throughputXSecond[secondTS] === 'undefined') {
+                            console.info(`[${new Date().toUTCString()}] Processing second [${secondTS}] (${Object.keys(throughputXSecond).length})`);
+                            individualSeconds.push(secondTS);
+                        }
+                        throughputXSecond[secondTS] = throughputXSecond[secondTS] || 0;
+                        throughputXSecond[secondTS]++;
+                    });
 
-                    resolve({
-                        threads: Number(threadFolderPath),
-                        avgThroughputPerSecond: avgThroughputPerSecond,
+                    lr.on('end', () => {
+                        console.info(`[${new Date().toUTCString()}] Processed [${threadFilePath}]`);
+                        let total = 0;
+                        const numSeconds = individualSeconds.length;
+                        const quaterIndex = Math.floor(numSeconds / 4);
+
+                        const interestingSeconds = individualSeconds
+                            .sort()
+                            .slice(quaterIndex, quaterIndex * 3);
+
+                        for (let second of interestingSeconds) {
+                            total += throughputXSecond[second];
+                        }
+
+                        const avgThroughputPerSecond = total / interestingSeconds.length;
+
+                        resolve({
+                            threads: Number(threadFolderPath),
+                            avgThroughputPerSecond: avgThroughputPerSecond,
+                        });
                     });
                 });
-            });
+            })
+        ).then((threadSamples) => {
+            const outData = threadSamples.sort((a, b) => a.threads > b.threads ? 1 : -1);
+            const outFile = path.join(outDir, 'throughput-and-threads.json');
+            fs.writeFileSync(outFile, JSON.stringify(outData), 'utf8');
+            console.info(`[${new Date().toUTCString()}] File outputted to [${outFile}]`);
         })
-    ).then((threadSamples) => {
-        const outFile = path.join(outDir, 'throughput-and-threads.json');
-        fs.writeFileSync(outFile, JSON.stringify(threadSamples), 'utf8');
-        console.info(`[${new Date().toUTCString()}] File outputted to [${outFile}]`);
-    });
+        .catch(err => console.error(err));
 
     //processDataset('merged.csv', mergedData);
 });
