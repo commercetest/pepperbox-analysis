@@ -164,7 +164,7 @@ fs.readdir(inDir, (err, folders) => {
                     console.info(`[${new Date().toUTCString()}] Combining [${threadFolderPath}] threads`);
 
                     require('child_process').execSync(`cd ${currentFolderPath} &&\
-                    rm ${threadFilePath} && \
+                    rm ${threadFilePath}; \
                     head -1 results-loadgen.0.csv > ${threadFilePath} && \
                     for filename in $(ls results*.csv); do sed 1d $filename >> ${threadFilePath}; done`, {
                         stdio: [0, 1, 2]
