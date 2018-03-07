@@ -247,6 +247,7 @@ fs.readdir(inDir, (err, folders) => {
                             avgMsgThroughputPerSecond: avgMsgThroughputPerSecond,
                             avgByteThroughputPerSecond: avgByteThroughputPerSecond,
                             avgLatencyXSecond: avgLatencyXSecond,
+                            latencyXSecond: latencyXSecond
                         };
 
                         fs.writeFileSync(prevFile, JSON.stringify(res), 'utf8');
