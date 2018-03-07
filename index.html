@@ -83,9 +83,9 @@
             });
     }
 
-    $.getJSON('out/throughput-and-threads.json').then(data => {
+    $.getJSON('out/throughput-and-threads-500.json').then(data => {
         chart.addSeries({
-            name: 'Avg Throughput x Threads',
+            name: '500 Bytes - Avg Throughput x Threads',
             data: data.map(d => [d.threads, d.avgThroughputPerSecond])
         });
     });

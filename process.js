@@ -178,7 +178,8 @@ fs.readdir(inDir, (err, folders) => {
 
                     console.info(`[${new Date().toUTCString()}] Processing combined [${threadFolderPath}] threads`);
 
-                    const throughputXSecond = {};
+                    const messageThroughputXSecond = {};
+                    const byteThroughputXSecond = {};
                     const individualSeconds = [];
 
 
@@ -193,17 +194,21 @@ fs.readdir(inDir, (err, folders) => {
                             return;
                         }
                         const secondTS = Math.floor(batchReceived / 1000) * 1000;
-                        if (typeof throughputXSecond[secondTS] === 'undefined') {
-                            console.info(`[${new Date().toUTCString()}] Processing second [${secondTS}] (${Object.keys(throughputXSecond).length})`);
+                        if (typeof messageThroughputXSecond[secondTS] === 'undefined') {
+                            console.info(`[${new Date().toUTCString()}] Processing second [${secondTS}] (${Object.keys(messageThroughputXSecond).length})`);
                             individualSeconds.push(secondTS);
                         }
-                        throughputXSecond[secondTS] = throughputXSecond[secondTS] || 0;
-                        throughputXSecond[secondTS]++;
+                        messageThroughputXSecond[secondTS] = messageThroughputXSecond[secondTS] || 0;
+                        messageThroughputXSecond[secondTS]++;
+
+                        byteThroughputXSecond[secondTS] = byteThroughputXSecond[secondTS] || 0;
+                        byteThroughputXSecond[secondTS] += messageSize;
                     });
 
                     lr.on('close', function (line) {
                         console.info(`[${new Date().toUTCString()}] Processed [${threadFilePath}]`);
-                        let total = 0;
+                        let totalMessages = 0;
+                        let totalBytes = 0;
                         const numSeconds = individualSeconds.length;
                         const quaterIndex = Math.floor(numSeconds / 4);
 
@@ -216,18 +221,21 @@ fs.readdir(inDir, (err, folders) => {
                         console.log(`[${new Date().toUTCString()}] Got sorted seconds [${interestingSeconds.length}]`);
 
                         for (let second of interestingSeconds) {
-                            total += throughputXSecond[second];
+                            totalMessages += messageThroughputXSecond[second];
+                            totalBytes += byteThroughputXSecond[second];
                         }
 
-                        console.log(`[${new Date().toUTCString()}] Got total time [${total}]`);
+                        console.log(`[${new Date().toUTCString()}] Got total time [${totalMessages}]`);
 
-                        const avgThroughputPerSecond = total / interestingSeconds.length;
+                        const avgMsgThroughputPerSecond = totalMessages / interestingSeconds.length;
+                        const avgByteThroughputPerSecond = totalBytes / interestingSeconds.length;
 
-                        console.log(`[${new Date().toUTCString()}] Got avg messages per second [${avgThroughputPerSecond}]`);
+                        console.log(`[${new Date().toUTCString()}] Got avg messages per second [${avgMsgThroughputPerSecond}]`);
 
                         const res = {
                             threads: Number(threadFolderPath),
-                            avgThroughputPerSecond: avgThroughputPerSecond,
+                            avgMsgThroughputPerSecond: avgMsgThroughputPerSecond,
+                            avgByteThroughputPerSecond: avgByteThroughputPerSecond,
                         };
 
                         fs.writeFileSync(prevFile, JSON.stringify(res), 'utf8');
