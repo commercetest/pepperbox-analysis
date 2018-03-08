@@ -14,7 +14,7 @@ for filename in $( ls $1 ); do
 
     if [ ! -f "$sortedFile" ]; then
         echo "Sorted file not found for [$filename] - generating now"
-        tail -n +2 $filename | sort -t "," -k 3 >> $sortedFile
+        tail -n +2 $filename | sort -t "," -k 3 -g >> $sortedFile
     else
         echo "Found previously sorted file [$filename]"
     fi
