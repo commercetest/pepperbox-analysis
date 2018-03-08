@@ -181,6 +181,8 @@ fs.readdir(inDir, (err, folders) => {
                     const messageThroughputXSecond = {};
                     const byteThroughputXSecond = {};
                     const latencyXSecond = {};
+                    const producedXSecond = {};
+                    const consumedXSecond = {};
                     const individualSeconds = [];
 
 
@@ -195,6 +197,11 @@ fs.readdir(inDir, (err, folders) => {
                         if (isNaN(batchReceived)) {
                             return;
                         }
+
+                        const producedSecondTS = Math.floor(messageGenerated / 1000) * 1000;
+                        producedXSecond[producedSecondTS] = producedXSecond[producedSecondTS] || 0;
+                        producedXSecond[producedSecondTS]++;
+
                         secondCount++;
                         const secondTS = Math.floor(batchReceived / 1000) * 1000;
                         if (typeof messageThroughputXSecond[secondTS] === 'undefined') {
@@ -207,6 +214,9 @@ fs.readdir(inDir, (err, folders) => {
 
                         byteThroughputXSecond[secondTS] = byteThroughputXSecond[secondTS] || 0;
                         byteThroughputXSecond[secondTS] += messageSize;
+
+                        consumedXSecond[secondTS] = consumedXSecond[secondTS] || 0;
+                        consumedXSecond[secondTS]++;
 
                         latencyXSecond[secondTS] = latencyXSecond[secondTS] || 0;
                         latencyXSecond[secondTS] = ((latencyXSecond[secondTS] * secondCount - 1) + consumerLag) / secondCount;
@@ -242,12 +252,32 @@ fs.readdir(inDir, (err, folders) => {
 
                         console.log(`[${new Date().toUTCString()}] Got avg messages per second [${avgMsgThroughputPerSecond}]`);
 
+                        const producedSeconds = Object.keys(producedXSecond)
+                            .map(Number)
+                            .sort();
+
+                        const producedXSecondArr = [];
+                        for (let secondTs of producedSeconds) {
+                            producedXSecondArr.push([secondTs, producedXSecond[secondTs]]);
+                        }
+
+                        const consumedSeconds = Object.keys(consumedXSecond)
+                            .map(Number)
+                            .sort();
+
+                        const consumedXSecondArr = [];
+                        for (let secondTs of consumedSeconds) {
+                            consumedXSecondArr.push([secondTs, consumedXSecond[secondTs]]);
+                        }
+
                         const res = {
                             threads: Number(threadFolderPath),
                             avgMsgThroughputPerSecond: avgMsgThroughputPerSecond,
                             avgByteThroughputPerSecond: avgByteThroughputPerSecond,
                             avgLatencyXSecond: avgLatencyXSecond,
-                            latencyXSecond: latencyXSecond
+                            latencyXSecond: latencyXSecond,
+                            producedXSecond: producedXSecondArr,
+                            consumedXSecond: consumedXSecondArr
                         };
 
                         fs.writeFileSync(prevFile, JSON.stringify(res), 'utf8');
