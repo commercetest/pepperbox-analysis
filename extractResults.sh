@@ -10,6 +10,8 @@ for filename in $( ls $1 ); do
         rm $outputFile
     fi
 
+    head -1 $filename > $outputFile
+
     if [ ! -f "$sortedFile" ]; then
         echo "Sorted file not found for [$filename] - generating now"
         tail -n +2 $filename | sort -t "," -k 3 >> $sortedFile
