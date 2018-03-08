@@ -2,7 +2,7 @@
 
 for filename in $( ls $1 ); do
     sortedFile="${filename}.sorted"
-    outputFile="$filename.result"
+    outputFile="$filename.result.csv"
 
     if [ -f "$outputFile" ]; then
         echo "Found previous results file [$outputFile] DELETING - you have 5 seconds to cancel"
