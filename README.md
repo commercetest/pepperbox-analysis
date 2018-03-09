@@ -24,7 +24,7 @@ The purpose of this tool is to generate useful, Excel-able, graphable data from 
 ```bash
 > # Pre-process CSV files
 > cd in/10
-> head -1 results-loadgen.0.csv > combined.csv && for filename in $(ls results*.csv); do sed 1d $filename >> combined.csv; done
+> head -1 results-loadgen.0.csv > combined.csv && for filename in $(ls results*.csv); do awk -F "," '/[0-9]+/ {print }' $filename >> combined.csv; done
 ```
 - Generate JSON output
 ```bash
