@@ -164,7 +164,7 @@ fs.readdir(inDir, (err, folders) => {
                         resolve(file);
                         return;
                     } catch (err) {
-                        console.warn(err);
+                        //console.warn(err);
                     }
 
                     console.info(`[${new Date().toUTCString()}] Combining [${threadFolderPath}] threads`);
@@ -191,12 +191,30 @@ fs.readdir(inDir, (err, folders) => {
                     const outstream = new(require('stream'))();
                     const lr = readline.createInterface(instream, outstream);
 
+                    let headerRow = [];
+
                     let secondCount = 0;
                     lr.on('line', function (line) {
-                        const [batchReceived, messageGenerated, consumerLag, messageId, recordOffset, messageSize] = line.split(',').map(Number);
-                        if (isNaN(batchReceived)) {
+                        const lineParts = line.split(',');
+                        if (headerRow.length === 0) {
+                            lineParts.forEach(columnName => headerRow.push(columnName));
                             return;
                         }
+
+                        const rowData = {};
+                        for(let i = 0; i <= headerRow.length; i++) {
+                            const key = headerRow[i];
+                            rowData[key] = lineParts[i];
+                        }
+
+                        const {
+                            batchReceived,
+                            messageGenerated,
+                            consumerLag,
+                            messageId,
+                            recordOffset,
+                            messageSize
+                        } = rowData;
 
                         const producedSecondTS = Math.floor(messageGenerated / 1000) * 1000;
                         producedXSecond[producedSecondTS] = producedXSecond[producedSecondTS] || 0;
