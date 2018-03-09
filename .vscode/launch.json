@@ -10,6 +10,12 @@
             "request": "launch",
             "name": "Launch Program",
             "program": "${workspaceFolder}/process.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch IOStat",
+            "program": "${workspaceFolder}/parse-iostat.js"
         }
     ]
 }
