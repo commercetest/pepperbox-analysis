@@ -19,6 +19,23 @@ The output JSON file contains:
 The purpose of this tool is to generate useful, Excel-able, graphable data from Million+ row CSV files
 
 ## How?
+
+### Latest
+The script index.js expects `in` and `out` directories in the root of this project.
+Put `.csv` files from pepper-box into the `in` directory and the `out` directory will be populated with various files.
+The most interesting output file is `sampled-results.combined.csv`.
+
+`*.combined.csv` - Combined and sorted based on mps value in filename
+`sampled-*.csv` - Combined files sampled by seconds, using the middle 50%
+
+### To Run
+```bash
+> npm install # install dependencies
+> node index.js
+> ls -la out/
+```
+
+### "Legacy"
 - Add your consumer output files to `in/[nubmer of threads]`
 - Generate a `combined` file:
 ```bash
