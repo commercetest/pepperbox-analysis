@@ -26,7 +26,7 @@ testRuns.forEach((testRun) => {
     const tests = files
         .filter((fileName) => !!~fileName.indexOf('results-'))
         .map((fileName) => {
-            const [_, testId, thread] = fileName.split('.');
+            const testId = fileName.split('mps.')[1].split('.')[0]; //TODO: fix later
             return Number(testId);
         })
         .sort()
