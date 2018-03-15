@@ -24,7 +24,7 @@ testRuns.forEach((testRun) => {
     const files = fs.readdirSync(inDir);
 
     const tests = files
-        .filter((fileName) => !!~fileName.indexOf('results-mps'))
+        .filter((fileName) => !!~fileName.indexOf('results-'))
         .map((fileName) => {
             const [_, testId, thread] = fileName.split('.');
             return Number(testId);
@@ -36,11 +36,11 @@ testRuns.forEach((testRun) => {
 
     console.log(`Generating combined CSV files`);
     for (let testId of tests) {
-        const firstFile = path.resolve(inDir, files.find(fn => !!~fn.indexOf(`results-mps.${testId}`)));
+        const firstFile = path.resolve(inDir, files.find(fn => !!~fn.indexOf(`.${testId}.`) && !!~fn.indexOf(`.csv`)));
         const outFile = path.resolve(outDir, `results-mps.${testId}.combined.csv`);
         console.info(`Generating [${outFile}]`);
         exec(`head -1 ${firstFile} > ${outFile}`);
-        const targetFiles = path.resolve(inDir, `results-mps.${testId}.*.csv`);
+        const targetFiles = path.resolve(inDir, `results-*.${testId}.*.csv`);
         exec(`awk -F "," '/[0-9]+/ {print }' ${targetFiles} | sort -k2 -n -t "," >> ${outFile}`);
     }
 
@@ -135,9 +135,9 @@ testRuns.forEach((testRun) => {
 
             for (let second of interestingSeconds) {
                 console.log(`[${new Date().toUTCString()}] Processing second [${second}]`);
-                const messagesConsumed = messageConsumedThroughputXSecond[second];
-                const messagesProduced = producedXSecond[second];
-                const bytesConsumed = byteConsumedThroughputXSecond[second];
+                const messagesConsumed = messageConsumedThroughputXSecond[second] || 0;
+                const messagesProduced = producedXSecond[second] || 0;
+                const bytesConsumed = byteConsumedThroughputXSecond[second] || 0;
                 const avgLatency = Math.floor(latencyXSecond[second] * 1000) / 1000;
 
                 const row = `${second},${messagesProduced},${messagesConsumed},${bytesConsumed},${avgLatency}`;
