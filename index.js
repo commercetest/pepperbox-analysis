@@ -141,7 +141,7 @@ testRuns.forEach((testRun) => {
                 const messagesConsumed = messageConsumedThroughputXSecond[second] || 0;
                 const messagesProduced = producedXSecond[second] || 0;
                 const bytesConsumed = byteConsumedThroughputXSecond[second] || 0;
-                const avgLatency = Math.floor(latencyXSecond[second] * 1000) / 1000;
+                const avgLatency = Math.floor(latencyXSecond[second] / 1000) * 1000;
 
                 const row = `${second},${messagesProduced},${messagesConsumed},${bytesConsumed},${avgLatency}`;
                 writeStream.write(row + '\n');
