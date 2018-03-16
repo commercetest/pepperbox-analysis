@@ -186,7 +186,7 @@ testRuns.forEach((testRun) => {
         const disks = stats[0].disk.map(a => a.disk_device).sort((a, b) => a > b ? 1 : -1);
         const outCSV = `timestamp,cpuUsage,${disks.map(d => d+'Tps').join(',')}\n` +
             stats.map(stat => {
-                const ts = (new Date('03/16/18 13:18:56')).valueOf();
+                const ts = (new Date(stat.timestamp)).valueOf();
                 const cpuUsage = Math.floor((100 - stat['avg-cpu'].idle) * 1000) / 1000;
                 const diskTps = stat.disk.sort((a, b) => {
                         return a.disk_device > b.disk_device ? 1 : -1;
