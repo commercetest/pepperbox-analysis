@@ -24,7 +24,7 @@ testRuns.forEach((testRun) => {
     const files = fs.readdirSync(inDir);
 
     const tests = files
-        .filter((fileName) => !!~fileName.indexOf('results-'))
+        .filter((fileName) => !!~fileName.indexOf('results-') && !!~fileName.indexOf('.csv'))
         .map((fileName) => {
             const testId = fileName.split('mps.')[1].split('.')[0]; //TODO: fix later
             return Number(testId);
@@ -175,6 +175,30 @@ testRuns.forEach((testRun) => {
 
         console.info(`[${new Date().toUTCString()}] Finished processing files`);
     })(combinedFiles);
+
+    const iostatFiles = files.filter(fn => !!~fn.indexOf('iostat.mps.json'));
+    console.info(`[${new Date().toUTCString()}] Beginning to process [${iostatFiles.length}] iostat JSON logs`);
+    iostatFiles.forEach(fileName => {
+        console.info(`Loading file [${fileName}]`);
+        const iostatLogs = require(path.resolve(inDir, fileName));
+        const host = iostatLogs.sysstat.hosts[0];
+        const stats = host.statistics;
+        const disks = stats[0].disk.map(a => a.disk_device).sort((a, b) => a > b ? 1 : -1);
+        const outCSV = `timestamp,cpuUsage,${disks.map(d => d+'Tps').join(',')}\n` +
+            stats.map(stat => {
+                const ts = (new Date('03/16/18 13:18:56')).valueOf();
+                const cpuUsage = Math.floor((100 - stat['avg-cpu'].idle) * 1000) / 1000;
+                const diskTps = stat.disk.sort((a, b) => {
+                        return a.disk_device > b.disk_device ? 1 : -1;
+                    })
+                    .map(d => Math.floor(d.tps * 1000) / 1000);
+                return `${ts},${cpuUsage},${diskTps.join(',')}`
+            }).join('\n');
+
+        const iostatLogOutFile = path.resolve(outDir, `${host.nodename}-${host.date.replace(/\//g, '-')}.csv`);
+        console.info(`Writing file to [${iostatLogOutFile}]`);
+        fs.writeFileSync(iostatLogOutFile, outCSV, 'utf8');
+    });
 
 });
 
