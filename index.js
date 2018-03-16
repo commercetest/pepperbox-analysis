@@ -40,7 +40,7 @@ testRuns.forEach((testRun) => {
         const outFile = path.resolve(outDir, `results-mps.${testId}.combined.csv`);
         console.info(`Generating [${outFile}]`);
         exec(`head -1 ${firstFile} > ${outFile}`);
-        const targetFiles = path.resolve(inDir, `results-*.${testId}.*.csv`);
+        const targetFiles = path.resolve(inDir, `results-*mps.${testId}.*.csv`);
         exec(`awk -F "," '/[0-9]+/ {print }' ${targetFiles} | sort -k2 -n -t "," >> ${outFile}`);
     }
 
