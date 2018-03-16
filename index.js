@@ -60,6 +60,7 @@ testRuns.forEach((testRun) => {
         const combinedSecondTimestamp = [];
         const combinedTestId = [];
         const combinedLatencyPerSecond = [];
+        const combinedDistanceFromFirstSecond = [];
 
         for (let fileName of combinedFiles) {
             const [_, testId] = fileName.split('.');
@@ -130,8 +131,10 @@ testRuns.forEach((testRun) => {
             const quaterIndex = Math.floor(numSeconds / 4);
 
             const interestingSeconds = individualSeconds
-                .sort()
-                .slice(quaterIndex, quaterIndex * 3);
+                .sort();
+            //.slice(quaterIndex, quaterIndex * 3);
+
+            const firstSecond = interestingSeconds[0];
 
             for (let second of interestingSeconds) {
                 console.log(`[${new Date().toUTCString()}] Processing second [${second}]`);
@@ -143,6 +146,7 @@ testRuns.forEach((testRun) => {
                 const row = `${second},${messagesProduced},${messagesConsumed},${bytesConsumed},${avgLatency}`;
                 writeStream.write(row + '\n');
 
+                combinedDistanceFromFirstSecond.push((second - firstSecond) / 1000)
                 combinedConsumedMessagesPerSecond.push(messagesConsumed);
                 combinedProducedMessagesPerSecond.push(messagesProduced);
                 combinedByesPerSecond.push(bytesConsumed);
@@ -152,14 +156,15 @@ testRuns.forEach((testRun) => {
             }
         }
 
-        const combinedCSV = `testId,second,messagesConsumed,messagesProduced,bytes,avgLatency\n` +
+        const combinedCSV = `mps,secondTs,relativeTime,messagesConsumed,messagesProduced,bytes,avgLatency\n` +
             combinedSecondTimestamp.map((second, index) => {
                 const testId = combinedTestId[index];
                 const messagesConsumed = combinedConsumedMessagesPerSecond[index];
                 const messagesProduced = combinedProducedMessagesPerSecond[index];
                 const bytes = combinedByesPerSecond[index];
                 const latency = combinedLatencyPerSecond[index];
-                return `${testId},${second},${messagesConsumed},${messagesProduced},${bytes},${latency}`
+                const distanceFromFirstSecond = combinedDistanceFromFirstSecond[index];
+                return `${testId},${second},${distanceFromFirstSecond},${messagesConsumed},${messagesProduced},${bytes},${latency}`
             }).join('\n');
 
         fs.writeFileSync(
