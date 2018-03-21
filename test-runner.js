@@ -103,11 +103,11 @@ const testStartDate = moment.utc();
 
                 log(`Monitors, Consumers, and Producers have completed`);
 
-                log(`RSyncing files to local directory (./results/)`);
-                await exec(`[ -d ./results ] || mkdir -p ./results`);
+                log(`RSyncing files to local directory (./in/)`);
+                await exec(`[ -d ./in ] || mkdir -p ./in`);
                 await Promise.all([
-                    ...argv.consumerHosts.map(host => syncData(host, '~/pepper-box/results/', './results/')),
-                    ...argv.producerHosts.map(host => syncData(host, '~/pepper-box/results/', './results/'))
+                    ...argv.consumerHosts.map(host => syncData(host, '~/pepper-box/results/', './in/')),
+                    ...argv.producerHosts.map(host => syncData(host, '~/pepper-box/results/', './in/'))
                 ]);
 
                 log(`Done Syncing`);

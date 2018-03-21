@@ -8,46 +8,47 @@ const inDir = path.resolve(__dirname, 'in');
 const testRuns = fs.readdirSync(inDir)
     .filter(fn => fn[0] !== '.' && fn[0] !== '_')
     .reduce((acc, folder) => {
-        return acc.concat(fs.readdirSync(path.resolve(inDir, folder)));
+        return acc.concat(
+            fs.readdirSync(path.resolve(inDir, folder))
+                .map(fn => path.resolve(inDir, folder, fn).split('/').slice(-2).join('/'))
+        );
     }, []);
 
 testRuns.forEach((testRun) => {
+    console.log(testRun)
     const inDir = path.resolve(__dirname, 'in', testRun);
-    console.log(`Reading files from [${inDir}]`);
 
     const outDir = path.resolve(__dirname, 'out', testRun);
-    console.log(`Writing files to [${outDir}]`);
 
     try {
         fs.statSync(outDir);
         console.info(`Output for test [${testRun.split('/').slice(-2).join('/')}] exists... Skipping`);
         return;
     } catch (err) {
+        try {
+            fs.mkdirSync(outDir.split('/').slice(0, -1).join('/'));
+        } catch (err) {}
         fs.mkdirSync(outDir);
     }
 
+    console.log(`Reading files from [${inDir}]`);
+    console.log(`Writing files to [${outDir}]`);
+
     const files = fs.readdirSync(inDir);
 
-    const tests = files
+    const CSVs = files
         .filter((fileName) => !!~fileName.indexOf('results-') && !!~fileName.indexOf('.csv'))
-        .map((fileName) => {
-            const testId = fileName.split('mps.')[1].split('.')[0]; //TODO: fix later
-            return Number(testId);
-        })
-        .sort()
-        .filter((val, index, arr) => val !== arr[index - 1]);
+        .sort();
 
-    console.log(`Found [${tests.length}] test runs`);
+    console.log(`Found [${CSVs.length}] CSV files`);
 
     console.log(`Generating combined CSV files`);
-    for (let testId of tests) {
-        const firstFile = path.resolve(inDir, files.find(fn => !!~fn.indexOf(`.${testId}.`) && !!~fn.indexOf(`.csv`)));
-        const outFile = path.resolve(outDir, `results-mps.${testId}.combined.csv`);
-        console.info(`Generating [${outFile}]`);
-        exec(`head -1 ${firstFile} > ${outFile}`);
-        const targetFiles = path.resolve(inDir, `results-*mps.${testId}.*.csv`);
-        exec(`awk -F "," '/[0-9]+/ {print }' ${targetFiles} | sort -k2 -n -t "," >> ${outFile}`);
-    }
+    const firstFile = path.resolve(inDir, CSVs[0]);
+    const outFile = path.resolve(outDir, `results.combined.csv`);
+    console.info(`Generating [${outFile}]`);
+    exec(`head -1 ${firstFile} > ${outFile}`);
+    const targetFiles = path.resolve(inDir, `results-*.csv`);
+    exec(`awk -F "," '/[0-9]+/ {print}' ${targetFiles} | sort -k2 -n -t "," >> ${outFile}`);
 
     const combinedFiles = fs.readdirSync(outDir)
         .filter(fn => !!~fn.indexOf('.combined.csv'))
@@ -68,9 +69,9 @@ testRuns.forEach((testRun) => {
         const combinedDistanceFromFirstSecond = [];
 
         for (let fileName of combinedFiles) {
-            const [_, testId] = fileName.split('.');
+            const testId = inDir.match(/tps=(\d+)-/)[1];
             const inFile = path.resolve(outDir, fileName);
-            const outFile = path.resolve(outDir, `sampled-results-mps.${testId}.csv`);
+            const outFile = path.resolve(outDir, `sampled-results.${testId}.csv`);
             console.info(`Processing [${inFile}] and outputting to [${outFile}]`);
 
             const messageConsumedThroughputXSecond = {};
