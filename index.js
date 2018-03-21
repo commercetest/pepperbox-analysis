@@ -6,7 +6,10 @@ const exec = require('sync-exec');
 const inDir = path.resolve(__dirname, 'in');
 
 const testRuns = fs.readdirSync(inDir)
-    .filter(fn => fn[0] !== '.' && fn[0] !== '_');
+    .filter(fn => fn[0] !== '.' && fn[0] !== '_')
+    .reduce((acc, folder) => {
+        return acc.concat(fs.readdirSync(path.resolve(inDir, folder)));
+    }, []);
 
 testRuns.forEach((testRun) => {
     const inDir = path.resolve(__dirname, 'in', testRun);
@@ -17,6 +20,8 @@ testRuns.forEach((testRun) => {
 
     try {
         fs.statSync(outDir);
+        console.info(`Output for test [${testRun.split('/').slice(-2).join('/')}] exists... Skipping`);
+        return;
     } catch (err) {
         fs.mkdirSync(outDir);
     }
