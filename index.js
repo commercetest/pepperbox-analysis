@@ -201,7 +201,7 @@ testRuns.forEach((testRun) => {
                 return `${ts},${cpuUsage},${diskTps.join(',')}`
             }).join('\n');
 
-        const iostatLogOutFile = path.resolve(outDir, `${host.nodename}-${host.date.replace(/\//g, '-')}.csv`);
+        const iostatLogOutFile = path.resolve(outDir, `iostat-${host.nodename}-${host.date.replace(/\//g, '-')}.csv`);
         console.info(`Writing file to [${iostatLogOutFile}]`);
         fs.writeFileSync(iostatLogOutFile, outCSV, 'utf8');
     });

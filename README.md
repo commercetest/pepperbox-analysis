@@ -12,20 +12,25 @@ The script index.js expects `in` and `out` directories in the root of this proje
 The `in` directory should contain one directory for each batch of test results from pepper-box. Within the test folder should be the outputted CSV files.
 ```
 in/
-    1k30sec/
-        results-mps.1.0.of[0..2].csv
-        results-mps.1.1.of[0..2].csv
-        ...
+    tps=10-threads=3-duration=20-topicname=my-topic/
+        11-28_22-03-18__UTC/
+            iostat-host.json
+            consume_mps_at.10.log
+            produce_mps_as.10.log
+            pblg.properties
+            results-mps.1.0.of[0..2].csv
+            results-mps.1.1.of[0..2].csv
+            ...
 ```
 
 After running `node index.js`, you should see something like the following:
 ```
 out/
-    1k30sec/
-        results-mps.1.combined.csv
-        sampled-results-mps-1.csv
-        ...
-        sampled-results.combined.csv
+    tps=10-threads=3-duration=20-topicname=my-topic/
+        11-28_22-03-18__UTC/
+            iostat-hostname-date.csv
+            sampled-results-mps-10.csv
+            sampled-results.combined.csv
 ```
 
 `*.combined.csv` - Combined and sorted based on mps value in filename
@@ -39,6 +44,9 @@ There is a sample Excel file in this project which demonstrates the kinds of vis
 ### To Run
 ```bash
 > npm install # install dependencies
+> rm -rf out/*
+> rm -rf in/*
+> ./runTestRunner.sh
 > node index.js
 > ls -la out/
 ```
