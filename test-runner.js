@@ -202,7 +202,7 @@ function startConsumers(argv) {
                     --num-consumers ${argv.threads}  \
                     --topic-name ${argv.topicName}.${argv.tps} \
                     --per-thread-topics YES \
-                    --test-duration ${argv.testLength + 5} \
+                    --test-duration ${argv.testLength + 10} \
                     --throughput-per-consumer ${argv.tps} \
                     --starting-offset 0 &> consume_mps_at.${argv.tps}.log
                 `,
