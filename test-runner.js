@@ -204,7 +204,11 @@ function startConsumers(argv) {
                     --per-thread-topics YES \
                     --test-duration ${argv.testLength + 10} \
                     --throughput-per-consumer ${argv.tps} \
-                    --starting-offset 0 &> consume_mps_at.${argv.tps}.\`hostname\`.log
+                    --starting-offset 0 &> consume_mps_at.${argv.tps}.\`hostname\`.log &&
+                    for file in  ./results-*.csv
+                    do
+                        mv -i "\${file}" "\${file/\].csv/].\$(hostname).csv}"
+                    done
                 `,
                 sshHost
             );
