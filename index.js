@@ -36,27 +36,39 @@ testRuns.forEach((testRun) => {
 
     const files = fs.readdirSync(inDir);
 
-    const CSVs = files
-        .filter((fileName) => !!~fileName.indexOf('results-') && !!~fileName.indexOf('.csv'))
-        .sort();
+    const hosts = files
+        .filter((fileName) => !!~fileName.indexOf('results-') && !!~fileName.indexOf('].') && !!~fileName.indexOf('.csv'))
+        .map((fileName) => {
+            const host = fileName.split('].')[1].split('.csv')[0]; //TODO: fix later
+            return host;
+        })
+        .sort()
+        .filter((val, index, arr) => val !== arr[index - 1]);
 
-    console.log(`Found [${CSVs.length}] CSV files`);
+    console.log(`Found [${hosts.length}] hosts`, hosts);
 
     console.log(`Generating combined CSV files`);
-    const firstFile = path.resolve(inDir, CSVs[0]);
-    const outFile = path.resolve(outDir, `results.combined.csv`);
-    console.info(`Generating [${outFile}]`);
-    exec(`head -1 ${firstFile} > ${outFile}`);
-    const targetFiles = path.resolve(inDir, `results-*.csv`);
-    exec(`awk -F "," '/[0-9]+/ {print}' ${targetFiles} | sort -k2 -n -t "," >> ${outFile}`);
+    for (let host of hosts) {
+        const firstFile = path.resolve(inDir, files.find(fn => !!~fn.indexOf(host) && !!~fn.indexOf(`.csv`)));
+        const outFile = path.resolve(outDir, `results.${host}.combined.csv`);
+        console.info(`Generating [${outFile}]`);
+        exec(`head -1 ${firstFile} > ${outFile}`);
+        const targetFiles = path.resolve(inDir, `results-*.${host}.csv`);
+        exec(`awk -F "," '/[0-9]+/ {print }' ${targetFiles} | sort -k2 -n -t "," >> ${outFile}`);
+    }
 
+    // console.log(`Found [${CSVs.length}] CSV files`);
+
+    // const firstFile = path.resolve(inDir, CSVs[0]);
+    // const outFile = path.resolve(outDir, `results.combined.csv`);
+    // console.info(`Generating [${outFile}]`);
+    // exec(`head -1 ${firstFile} > ${outFile}`);
+    // const targetFiles = path.resolve(inDir, `results-*.csv`);
+    // exec(`awk -F "," '/[0-9]+/ {print}' ${targetFiles} | sort -k2 -n -t "," >> ${outFile}`);
+    
     const combinedFiles = fs.readdirSync(outDir)
         .filter(fn => !!~fn.indexOf('.combined.csv'))
-        .sort((a, b) => {
-            const [_a, ai] = a.split('.');
-            const [_b, bi] = b.split('.');
-            return Number(ai) > Number(bi) ? 1 : -1;
-        });
+        .sort();
     console.info(`Got [${combinedFiles.length}] *.combined.csv files`);
 
     (async function processCombinedFiles(combinedFiles) {
