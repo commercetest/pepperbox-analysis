@@ -67,7 +67,7 @@ testRuns.forEach((testRun) => {
     // exec(`awk -F "," '/[0-9]+/ {print}' ${targetFiles} | sort -k2 -n -t "," >> ${outFile}`);
     
     const combinedFiles = fs.readdirSync(outDir)
-        .filter(fn => !!~fn.indexOf('.combined.csv'))
+        .filter(fn => !!~fn.indexOf('results.') && !!~fn.indexOf('.combined.csv'))
         .sort();
     console.info(`Got [${combinedFiles.length}] *.combined.csv files`);
 
@@ -82,8 +82,9 @@ testRuns.forEach((testRun) => {
 
         for (let fileName of combinedFiles) {
             const testId = inDir.match(/tps=(\d+)-/)[1];
+            const host = fileName.split('results.')[1].split('.csv')[0]; //TODO: fix later
             const inFile = path.resolve(outDir, fileName);
-            const outFile = path.resolve(outDir, `sampled-results.${testId}.csv`);
+            const outFile = path.resolve(outDir, `sampled-results.${host}.csv`);
             console.info(`Processing [${inFile}] and outputting to [${outFile}]`);
 
             const messageConsumedThroughputXSecond = {};
