@@ -182,7 +182,7 @@ testRuns.forEach((testRun) => {
         console.info(`[${new Date().toUTCString()}] Finished processing files`);
     })(combinedFiles);
 
-    const iostatFiles = files.filter(fn => !!~fn.indexOf('iostat.mps.json'));
+    const iostatFiles = files.filter(fn => !!~fn.indexOf('iostat-') && !!~fn.indexOf('.json'));
     console.info(`[${new Date().toUTCString()}] Beginning to process [${iostatFiles.length}] iostat JSON logs`);
     iostatFiles.forEach(fileName => {
         console.info(`Loading file [${fileName}]`);
