@@ -35,21 +35,33 @@ const argv = require('yargs')
         },
         producerHosts: {
             demandOption: true,
-            defualt: 'localhost:22',
+            default: 'localhost:22',
             describe: 'Comma-seperated list of SSH user:pass@host:port',
             coerce: (hosts) => hosts.split(',')
         },
         consumerHosts: {
             demandOption: true,
-            defualt: 'localhost:22',
+            default: 'localhost:22',
             describe: 'Comma-seperated list of SSH user:pass@host:port',
             coerce: (hosts) => hosts.split(',')
         },
         monitorHosts: {
             demandOption: true,
-            defualt: 'localhost:22',
+            default: 'localhost:22',
             describe: 'Comma-seperated list of SSH user:pass@host:port',
             coerce: (hosts) => hosts.split(',')
+        },
+        topicPrefix: {
+            default: '',
+            describe: 'Comma-seperated list of topicPrefix@host',
+            coerce: (hosts) => {
+                return hosts.split(',')
+                    .reduce((acc, hostTopicPair) => {
+                        const [topicPrefix, host] = hostTopicPair.split('@');
+                        acc[host] = topicPrefix;
+                        return acc;
+                    }, {});
+            }
         }
     })
     .help()
@@ -138,6 +150,8 @@ function startMonitors(argv) {
 function startProducers(argv) {
     return Promise.all(
         argv.producerHosts.map((sshHost) => {
+            const hostName = sshHost.replace(/.*@/g, '').replace(/:.*/g, '');
+            const topicPrefix = argv.topicPrefix[hostName] || '';
             const dirName = `$HOME/pepper-box/results/tps=${argv.tps}-threads=${argv.threads}-duration=${argv.testLength}-topicname=${argv.topicName}/${moment(testStartDate).format('DD-MM-YY_HH-mm__UTC')}`;
             return remoteExecPromise(
                 `
@@ -147,7 +161,7 @@ function startProducers(argv) {
                 java -cp $HOME/pepper-box/target/pepper-box-1.0.jar:.  com.gslab.pepper.PepperBoxLoadGenerator \
                     --schema-file $HOME/pepper-box/schema${argv.messageSize}.txt \
                     --producer-config-file pblg.\`hostname\`.properties \
-                    --topic-name ${argv.topicName}.${argv.tps} \
+                    --topic-name ${topicPrefix}${argv.topicName}.${argv.tps} \
                     --per-thread-topics YES \
                     --throughput-per-producer ${argv.tps} \
                     --test-duration ${argv.testLength} \
@@ -191,6 +205,8 @@ function prepProducers(argv) {
 function startConsumers(argv) {
     return Promise.all(
         argv.consumerHosts.map((sshHost) => {
+            const hostName = sshHost.replace(/.*@/g, '').replace(/:.*/g, '');
+            const topicPrefix = argv.topicPrefix[hostName] || '';
             const dirName = `$HOME/pepper-box/results/tps=${argv.tps}-threads=${argv.threads}-duration=${argv.testLength}-topicname=${argv.topicName}/${moment(testStartDate).format('DD-MM-YY_HH-mm__UTC')}`;
             return remoteExecPromise(
                 `
@@ -200,7 +216,7 @@ function startConsumers(argv) {
                 java -cp $HOME/pepper-box/target/pepper-box-1.0.jar:. com.gslab.pepper.PepperBoxLoadConsumer \
                     --consumer-config-file pblg.\`hostname\`.properties \
                     --num-consumers ${argv.threads}  \
-                    --topic-name ${argv.topicName}.${argv.tps} \
+                    --topic-name ${topicPrefix}${argv.topicName}.${argv.tps} \
                     --per-thread-topics YES \
                     --test-duration ${argv.testLength + 10} \
                     --throughput-per-consumer ${argv.tps} \
