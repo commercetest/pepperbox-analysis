@@ -106,8 +106,8 @@ const testStartDate = moment.utc();
                 log(`RSyncing files to local directory (./in/)`);
                 await exec(`[ -d ./in ] || mkdir -p ./in`);
                 await Promise.all([
-                    ...argv.consumerHosts.map(host => syncData(host, '~/pepper-box/results/', './in/')),
-                    ...argv.producerHosts.map(host => syncData(host, '~/pepper-box/results/', './in/'))
+                    ...argv.consumerHosts.map(host => syncData(host, '$HOME/pepper-box/results/', './in/')),
+                    ...argv.producerHosts.map(host => syncData(host, '$HOME/pepper-box/results/', './in/'))
                 ]);
 
                 log(`Done Syncing`);
@@ -124,7 +124,7 @@ const testStartDate = moment.utc();
 function startMonitors(argv) {
     return Promise.all(
         argv.monitorHosts.map((sshHost) => {
-            const dirName = `~/pepper-box/results/tps=${argv.tps}-threads=${argv.threads}-duration=${argv.testLength}-topicname=${argv.topicName}/${moment(testStartDate).format('HH-mm_DD-MM-YY__UTC')}`;
+            const dirName = `$HOME/pepper-box/results/tps=${argv.tps}-threads=${argv.threads}-duration=${argv.testLength}-topicname=${argv.topicName}/${moment(testStartDate).format('HH-mm_DD-MM-YY__UTC')}`;
             return remoteExecPromise(
                 `
                     [ -d ${dirName} ] || mkdir -p ${dirName};
@@ -138,21 +138,21 @@ function startMonitors(argv) {
 function startProducers(argv) {
     return Promise.all(
         argv.producerHosts.map((sshHost) => {
-            const dirName = `~/pepper-box/results/tps=${argv.tps}-threads=${argv.threads}-duration=${argv.testLength}-topicname=${argv.topicName}/${moment(testStartDate).format('HH-mm_DD-MM-YY__UTC')}`;
+            const dirName = `$HOME/pepper-box/results/tps=${argv.tps}-threads=${argv.threads}-duration=${argv.testLength}-topicname=${argv.topicName}/${moment(testStartDate).format('HH-mm_DD-MM-YY__UTC')}`;
             return remoteExecPromise(
                 `
-                cd ~/pepper-box;
-                cp ./pblg.properties ${dirName}/pblg.properties;
+                cd $HOME/pepper-box;
+                cp ./pblg.properties "${dirName}/pblg.$(hostname).properties";
                 cd ${dirName} &&
-                java -cp ../../../target/pepper-box-1.0.jar:.  com.gslab.pepper.PepperBoxLoadGenerator \
-                    --schema-file ../../../schema${argv.messageSize}.txt \
-                    --producer-config-file pblg.properties \
+                java -cp $HOME/pepper-box/target/pepper-box-1.0.jar:.  com.gslab.pepper.PepperBoxLoadGenerator \
+                    --schema-file $HOME/pepper-box/schema${argv.messageSize}.txt \
+                    --producer-config-file pblg.\`hostname\`.properties \
                     --topic-name ${argv.topicName}.${argv.tps} \
                     --per-thread-topics YES \
                     --throughput-per-producer ${argv.tps} \
                     --test-duration ${argv.testLength} \
                     --num-producers ${argv.threads}  \
-                    --starting-offset 0 &> produce_mps_at.${argv.tps}.log;
+                    --starting-offset 0 &> produce_mps_at.${argv.tps}.\`hostname\`.log;
                 `,
                 sshHost
             );
@@ -163,7 +163,7 @@ function startProducers(argv) {
 function prepConsumers(argv) {
     return Promise.all(
         argv.consumerHosts.map((sshHost) => {
-            const dirName = `~/pepper-box/results/tps=${argv.tps}-threads=${argv.threads}-duration=${argv.testLength}-topicname=${argv.topicName}/${moment(testStartDate).format('HH-mm_DD-MM-YY__UTC')}`;
+            const dirName = `$HOME/pepper-box/results/tps=${argv.tps}-threads=${argv.threads}-duration=${argv.testLength}-topicname=${argv.topicName}/${moment(testStartDate).format('HH-mm_DD-MM-YY__UTC')}`;
             return remoteExecPromise(
                 `
                 [ -d ${dirName} ] || mkdir -p ${dirName};
@@ -177,7 +177,7 @@ function prepConsumers(argv) {
 function prepProducers(argv) {
     return Promise.all(
         argv.producerHosts.map((sshHost) => {
-            const dirName = `~/pepper-box/results/tps=${argv.tps}-threads=${argv.threads}-duration=${argv.testLength}-topicname=${argv.topicName}/${moment(testStartDate).format('HH-mm_DD-MM-YY__UTC')}`;
+            const dirName = `$HOME/pepper-box/results/tps=${argv.tps}-threads=${argv.threads}-duration=${argv.testLength}-topicname=${argv.topicName}/${moment(testStartDate).format('HH-mm_DD-MM-YY__UTC')}`;
             return remoteExecPromise(
                 `
                 [ -d ${dirName} ] || mkdir -p ${dirName};
@@ -191,20 +191,20 @@ function prepProducers(argv) {
 function startConsumers(argv) {
     return Promise.all(
         argv.consumerHosts.map((sshHost) => {
-            const dirName = `~/pepper-box/results/tps=${argv.tps}-threads=${argv.threads}-duration=${argv.testLength}-topicname=${argv.topicName}/${moment(testStartDate).format('HH-mm_DD-MM-YY__UTC')}`;
+            const dirName = `$HOME/pepper-box/results/tps=${argv.tps}-threads=${argv.threads}-duration=${argv.testLength}-topicname=${argv.topicName}/${moment(testStartDate).format('HH-mm_DD-MM-YY__UTC')}`;
             return remoteExecPromise(
                 `
-                cd ~/pepper-box;
-                cp ./pblg.properties ${dirName}/pblg.properties;
+                cd $HOME/pepper-box;
+                cp ./pblg.properties "${dirName}/pblg.$(hostname).properties";
                 cd ${dirName} &&
-                java -cp ../../../target/pepper-box-1.0.jar:. com.gslab.pepper.PepperBoxLoadConsumer \
-                    --consumer-config-file pblg.properties \
+                java -cp $HOME/pepper-box/target/pepper-box-1.0.jar:. com.gslab.pepper.PepperBoxLoadConsumer \
+                    --consumer-config-file pblg.\`hostname\`.properties \
                     --num-consumers ${argv.threads}  \
                     --topic-name ${argv.topicName}.${argv.tps} \
                     --per-thread-topics YES \
                     --test-duration ${argv.testLength + 10} \
                     --throughput-per-consumer ${argv.tps} \
-                    --starting-offset 0 &> consume_mps_at.${argv.tps}.log
+                    --starting-offset 0 &> consume_mps_at.${argv.tps}.\`hostname\`.log
                 `,
                 sshHost
             );
