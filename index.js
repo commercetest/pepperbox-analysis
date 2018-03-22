@@ -125,7 +125,7 @@ testRuns.forEach((testRun) => {
 
                 latencyXSecond[secondTS] = latencyXSecond[secondTS] || 0;
                 //https://www.bennadel.com/blog/1627-create-a-running-average-without-storing-individual-values.htm
-                latencyXSecond[secondTS] = ((latencyXSecond[secondTS] * secondCount - 1) + Number(consumerLag)) / secondCount;
+                latencyXSecond[secondTS] = ((latencyXSecond[secondTS] * (secondCount - 1)) + Number(consumerLag)) / secondCount;
             });
 
             const writeStream = fs.createWriteStream(outFile);
@@ -147,7 +147,7 @@ testRuns.forEach((testRun) => {
                 const messagesConsumed = messageConsumedThroughputXSecond[second] || 0;
                 const messagesProduced = producedXSecond[second] || 0;
                 const bytesConsumed = byteConsumedThroughputXSecond[second] || 0;
-                const avgLatency = Math.floor(latencyXSecond[second] / 1000) * 1000;
+                const avgLatency = Math.floor(latencyXSecond[second]);
 
                 const row = `${second},${messagesProduced},${messagesConsumed},${bytesConsumed},${avgLatency}`;
                 writeStream.write(row + '\n');
