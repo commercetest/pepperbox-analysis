@@ -124,7 +124,7 @@ const testStartDate = moment.utc();
 function startMonitors(argv) {
     return Promise.all(
         argv.monitorHosts.map((sshHost) => {
-            const dirName = `$HOME/pepper-box/results/tps=${argv.tps}-threads=${argv.threads}-duration=${argv.testLength}-topicname=${argv.topicName}/${moment(testStartDate).format('HH-mm_DD-MM-YY__UTC')}`;
+            const dirName = `$HOME/pepper-box/results/tps=${argv.tps}-threads=${argv.threads}-duration=${argv.testLength}-topicname=${argv.topicName}/${moment(testStartDate).format('DD-MM-YY_HH-mm__UTC')}`;
             return remoteExecPromise(
                 `
                     [ -d ${dirName} ] || mkdir -p ${dirName};
@@ -138,7 +138,7 @@ function startMonitors(argv) {
 function startProducers(argv) {
     return Promise.all(
         argv.producerHosts.map((sshHost) => {
-            const dirName = `$HOME/pepper-box/results/tps=${argv.tps}-threads=${argv.threads}-duration=${argv.testLength}-topicname=${argv.topicName}/${moment(testStartDate).format('HH-mm_DD-MM-YY__UTC')}`;
+            const dirName = `$HOME/pepper-box/results/tps=${argv.tps}-threads=${argv.threads}-duration=${argv.testLength}-topicname=${argv.topicName}/${moment(testStartDate).format('DD-MM-YY_HH-mm__UTC')}`;
             return remoteExecPromise(
                 `
                 cd $HOME/pepper-box;
@@ -163,7 +163,7 @@ function startProducers(argv) {
 function prepConsumers(argv) {
     return Promise.all(
         argv.consumerHosts.map((sshHost) => {
-            const dirName = `$HOME/pepper-box/results/tps=${argv.tps}-threads=${argv.threads}-duration=${argv.testLength}-topicname=${argv.topicName}/${moment(testStartDate).format('HH-mm_DD-MM-YY__UTC')}`;
+            const dirName = `$HOME/pepper-box/results/tps=${argv.tps}-threads=${argv.threads}-duration=${argv.testLength}-topicname=${argv.topicName}/${moment(testStartDate).format('DD-MM-YY_HH-mm__UTC')}`;
             return remoteExecPromise(
                 `
                 [ -d ${dirName} ] || mkdir -p ${dirName};
@@ -177,7 +177,7 @@ function prepConsumers(argv) {
 function prepProducers(argv) {
     return Promise.all(
         argv.producerHosts.map((sshHost) => {
-            const dirName = `$HOME/pepper-box/results/tps=${argv.tps}-threads=${argv.threads}-duration=${argv.testLength}-topicname=${argv.topicName}/${moment(testStartDate).format('HH-mm_DD-MM-YY__UTC')}`;
+            const dirName = `$HOME/pepper-box/results/tps=${argv.tps}-threads=${argv.threads}-duration=${argv.testLength}-topicname=${argv.topicName}/${moment(testStartDate).format('DD-MM-YY_HH-mm__UTC')}`;
             return remoteExecPromise(
                 `
                 [ -d ${dirName} ] || mkdir -p ${dirName};
@@ -191,7 +191,7 @@ function prepProducers(argv) {
 function startConsumers(argv) {
     return Promise.all(
         argv.consumerHosts.map((sshHost) => {
-            const dirName = `$HOME/pepper-box/results/tps=${argv.tps}-threads=${argv.threads}-duration=${argv.testLength}-topicname=${argv.topicName}/${moment(testStartDate).format('HH-mm_DD-MM-YY__UTC')}`;
+            const dirName = `$HOME/pepper-box/results/tps=${argv.tps}-threads=${argv.threads}-duration=${argv.testLength}-topicname=${argv.topicName}/${moment(testStartDate).format('DD-MM-YY_HH-mm__UTC')}`;
             return remoteExecPromise(
                 `
                 cd $HOME/pepper-box;
