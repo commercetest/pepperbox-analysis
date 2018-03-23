@@ -118,6 +118,7 @@ const testStartDate = moment.utc();
                 log(`RSyncing files to local directory (./in/)`);
                 await exec(`[ -d ./in ] || mkdir -p ./in`);
                 await Promise.all([
+                    ...argv.monitorHosts.map(host => syncData(host, '~/pepper-box/results/', './in/')),
                     ...argv.consumerHosts.map(host => syncData(host, '~/pepper-box/results/', './in/')),
                     ...argv.producerHosts.map(host => syncData(host, '~/pepper-box/results/', './in/'))
                 ]);
