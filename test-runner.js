@@ -219,7 +219,7 @@ function startConsumers(argv) {
                     --num-consumers ${argv.threads}  \
                     --topic-name ${topicPrefix}${argv.topicName}.${argv.tps} \
                     --per-thread-topics YES \
-                    --test-duration ${argv.testLength + 10} \
+                    --test-duration ${argv.testLength * 3} \
                     --throughput-per-consumer ${argv.tps} \
                     --starting-offset 0 &> consume_mps_at.${argv.tps}.\`hostname\`.log &&
                     for file in  ./results-*.csv
